@@ -1,0 +1,33 @@
+name: Build PoolLab In-Game Overlay Library
+on:
+  push:
+    paths:
+      - 'Overlay/**'
+      - '.github/workflows/build-overlay.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ios-overlay:
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile ARM64 iOS library
+        run: |
+          set -euo pipefail
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          mkdir -p output
+          xcrun --sdk iphoneos clang \
+            -arch arm64 -isysroot "$SDK" -miphoneos-version-min=13.0 \
+            -fobjc-arc -fmodules -O2 -dynamiclib \
+            -Wl,-install_name,@executable_path/Frameworks/libloader.framework/libloader \
+            -framework UIKit -framework Foundation -framework QuartzCore \
+            Overlay/PoolLabOverlay.m -o output/libloader
+          file output/libloader
+      - name: Upload overlay binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: PoolLab-Overlay-ARM64
+          path: output/libloader
+          retention-days: 7
