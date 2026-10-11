@@ -1,0 +1,17 @@
+name: PoolLab
+options:
+  bundleIdPrefix: ch.poollab
+  deploymentTarget:
+    iOS: '17.0'
+targets:
+  PoolLab:
+    type: application
+    platform: iOS
+    sources: [PoolLab]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ch.poollab.practice
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: PoolLab
+        SWIFT_VERSION: '5.0'
+        TARGETED_DEVICE_FAMILY: '1,2'
