@@ -1,8 +1,8 @@
-name: Build PoolLab In-Game Overlay Library
+name: Build PoolLab NEO Overlay
 on:
   push:
     paths:
-      - 'Overlay/**'
+      - 'Overlay/PoolLabPro.m'
       - '.github/workflows/build-overlay.yml'
   workflow_dispatch:
 permissions:
@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - name: Compile ARM64 iOS library
+      - name: Compile ARM64 iOS overlay library
         run: |
           set -euo pipefail
           SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
@@ -23,11 +23,11 @@ jobs:
             -fobjc-arc -fmodules -O2 -dynamiclib \
             -Wl,-install_name,@executable_path/Frameworks/libloader.framework/libloader \
             -framework UIKit -framework Foundation -framework QuartzCore \
-            Overlay/PoolLabOverlay.m -o output/libloader
+            Overlay/PoolLabPro.m -o output/libloader
           file output/libloader
       - name: Upload overlay binary
         uses: actions/upload-artifact@v4
         with:
-          name: PoolLab-Overlay-ARM64
+          name: PoolLab-Neo-Overlay-ARM64
           path: output/libloader
           retention-days: 7
