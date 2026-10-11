@@ -1,0 +1,37 @@
+name: Build PoolLab IPA
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate project
+        run: xcodegen generate
+      - name: Build unsigned iPhone app
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild -project PoolLab.xcodeproj -scheme PoolLab -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/Build" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+      - name: Package IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP="$RUNNER_TEMP/Build/Build/Products/Release-iphoneos/PoolLab.app"
+          test -f "$APP/PoolLab"
+          mkdir -p export/Payload
+          ditto "$APP" export/Payload/PoolLab.app
+          (cd export && zip -qr PoolLab-UNSIGNED.ipa Payload)
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: PoolLab-IPA-for-Sideloadly
+          path: export/PoolLab-UNSIGNED.ipa
+          retention-days: 7
