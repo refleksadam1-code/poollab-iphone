@@ -1,0 +1,8 @@
+*.ipa
+*.p12
+*.mobileprovision
+*.xcarchive
+private_key.pem
+Admin/
+DerivedData/
+.DS_Store
