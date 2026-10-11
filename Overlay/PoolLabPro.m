@@ -117,7 +117,7 @@ static inline CGPoint PLUnit(CGPoint a, CGPoint b) {
 - (UIButton*)button:(NSString*)title rect:(CGRect)rect selector:(SEL)selector {
     UIButton *b=[UIButton buttonWithType:UIButtonTypeSystem];
     b.frame=rect;b.layer.cornerRadius=10;
-    b.backgroundColor=[self.purple];
+    b.backgroundColor=[self purple];
     b.titleLabel.font=[UIFont systemFontOfSize:13 weight:UIFontWeightBold];
     [b setTitle:title forState:UIControlStateNormal];[b setTitleColor:UIColor.whiteColor forState:UIControlStateNormal];
     [b addTarget:self action:selector forControlEvents:UIControlEventTouchUpInside];return b;
@@ -162,13 +162,13 @@ static inline CGPoint PLUnit(CGPoint a, CGPoint b) {
     self.panel.backgroundColor=[UIColor colorWithRed:.057 green:.067 blue:.125 alpha:.975];
     self.panel.layer.cornerRadius=19;
     self.panel.layer.borderWidth=1.5;
-    self.panel.layer.borderColor=[self.purple].CGColor;
+    self.panel.layer.borderColor=[self purple].CGColor;
     self.panel.layer.shadowColor=[self purple].CGColor;self.panel.layer.shadowOpacity=.6;
     self.panel.layer.shadowRadius=12;
     [self.panel addSubview:[self label:@"POOL LAB  •  NEO" y:10 size:20 color:[self cyan]]];
     [self.panel addSubview:[self label:@"LIVE OVERLAY  /  OHNE KEY" y:37 size:10 color:[UIColor colorWithWhite:.7 alpha:1]]];
     UIView *rule=[[UIView alloc]initWithFrame:CGRectMake(16,67,312,1)];
-    rule.backgroundColor=[self.purple];[self.panel addSubview:rule];
+    rule.backgroundColor=[self purple];[self.panel addSubview:rule];
     self.aimSwitch=[self setting:@"EXTENDED AIM LINE" y:79 sel:@selector(updated) on:YES];
     self.bankSwitch=[self setting:@"BANK SHOT GUIDE" y:116 sel:@selector(updated) on:YES];
     self.pocketSwitch=[self setting:@"GHOST BALL / POCKET" y:153 sel:@selector(updated) on:NO];
