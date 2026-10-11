@@ -97,7 +97,7 @@ static inline CGPoint PLUnit(CGPoint a, CGPoint b) {
 @interface PLController : UIViewController
 @property(nonatomic,strong) PLGuide *guide;
 @property(nonatomic,strong) UIView *panel;
-@property(nonatomic,strong) UIButton *launcher,*cueHandle,*targetHandle,*pocketButton;
+@property(nonatomic,strong) UIButton *launcher,*cueHandle,*targetHandle,*pocketButton,*autoPocketButton;
 @property(nonatomic,strong) UISwitch *aimSwitch,*bankSwitch,*pocketSwitch,*handlesSwitch;
 @property(nonatomic,strong) UILabel *status;
 @property(nonatomic) CGPoint cueNorm,targetNorm;
@@ -173,7 +173,10 @@ static inline CGPoint PLUnit(CGPoint a, CGPoint b) {
     self.bankSwitch=[self setting:@"BANK SHOT GUIDE" y:116 sel:@selector(updated) on:YES];
     self.pocketSwitch=[self setting:@"GHOST BALL / POCKET" y:153 sel:@selector(updated) on:NO];
     self.handlesSwitch=[self setting:@"MARKER ANZEIGEN" y:190 sel:@selector(updated) on:YES];
-    self.pocketButton=[self button:@"TASCHE WECHSELN  →" rect:CGRectMake(17,235,310,40) selector:@selector(nextPocket)];
+    self.autoPocketButton=[self button:@"BESTE TASCHE" rect:CGRectMake(17,235,148,40) selector:@selector(recommendPocket)];
+    self.autoPocketButton.backgroundColor=[self purple];
+    [self.panel addSubview:self.autoPocketButton];
+    self.pocketButton=[self button:@"WEITER  →" rect:CGRectMake(173,235,154,40) selector:@selector(nextPocket)];
     self.pocketButton.backgroundColor=[UIColor colorWithRed:.13 green:.25 blue:.32 alpha:1];
     [self.panel addSubview:self.pocketButton];
     self.status=[self label:@"C = Spielball  •  O = Objektball" y:283 size:12 color:[self cyan]];
@@ -211,9 +214,44 @@ static inline CGPoint PLUnit(CGPoint a, CGPoint b) {
     self.guide.objectBall=self.targetHandle.center;
     self.guide.chosenPocket=self.pocket;
     [self.guide setNeedsDisplay];
+    if (self.status) {
+        CGPoint p = [self.guide pocketAt:self.pocket rect:CGRectInset(self.guide.bounds,self.guide.inset,self.guide.inset*0.8)];
+        CGPoint dir=PLUnit(self.targetHandle.center,p);
+        CGPoint ghost=PLPlus(self.targetHandle.center,dir,-2.0*self.guide.ballRadius);
+        CGPoint v=PLUnit(self.cueHandle.center,ghost);
+        CGFloat angle=atan2(v.y,v.x)*180.0/M_PI;
+        self.status.text=[NSString stringWithFormat:@"Tasche %ld  ·  Zielwinkel %.0f°",(long)(self.pocket+1),angle];
+    }
 }
 - (void)toggle { self.panel.hidden=!self.panel.hidden; self.panelShown=!self.panel.hidden; }
 - (void)nextPocket {self.pocket=(self.pocket+1)%6; [self refreshGuide];}
+- (void)recommendPocket {
+    // Real calculation from manually positioned markers. No access to live game ball state.
+    CGRect table=CGRectInset(self.guide.bounds,self.guide.inset,self.guide.inset*0.8);
+    CGFloat best=CGFLOAT_MAX;
+    NSInteger bestIndex=0;
+    CGPoint cue=self.cueHandle.center, ball=self.targetHandle.center;
+    CGPoint approach=PLUnit(cue,ball);
+    for(NSInteger idx=0;idx<6;idx++){
+        CGPoint pocket=[self.guide pocketAt:idx rect:table];
+        CGFloat run=PLDistance(ball,pocket);
+        if(run<self.guide.ballRadius*3.0) continue;
+        CGPoint toward=PLUnit(ball,pocket);
+        CGPoint ghost=PLPlus(ball,toward,-self.guide.ballRadius*2.0);
+        CGPoint shot=PLUnit(cue,ghost);
+        CGFloat cosine=PLClamp(shot.x*toward.x+shot.y*toward.y,-1,1);
+        // Prefer a realistic cut angle; discourage long runs and out-of-table ghost positions.
+        CGFloat cut=acos(cosine);
+        CGFloat cueTravel=PLDistance(cue,ghost);
+        BOOL ghostInside=CGRectContainsPoint(CGRectInset(table,6,6),ghost);
+        CGFloat score=3.2*cut + .002*run + .001*cueTravel + (ghostInside?0:5);
+        if (shot.x*approach.x+shot.y*approach.y < .1) score+=3;
+        if (score<best) {best=score;bestIndex=idx;}
+    }
+    self.pocket=bestIndex;
+    self.pocketSwitch.on=YES;
+    [self updated];
+}
 - (void)updated {
     self.guide.aimVisible=self.aimSwitch.on;
     self.guide.bankVisible=self.bankSwitch.on;
@@ -223,6 +261,7 @@ static inline CGPoint PLUnit(CGPoint a, CGPoint b) {
     self.targetHandle.hidden=!markers;
     self.pocketButton.enabled=self.pocketSwitch.on;
     self.pocketButton.alpha=self.pocketSwitch.on?1:.4;
+    self.autoPocketButton.enabled=YES;
     [self refreshGuide];
 }
 @end
